@@ -3,6 +3,59 @@ name: Build Lotus debug APK
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Broncode ophalen
+        uses: actions/checkout@v4
+
+      - name: Java 17 instellen
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Android SDK instellen
+        uses: android-actions/setup-android@v3
+
+      - name: Android SDK-pakketten installeren
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;34.0.0"
+
+      - name: Gradle 8.7 ophalen
+        run: |
+          curl --fail --location --retry 3 --output /tmp/gradle-8.7-bin.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle-8.7-bin.zip -d /opt
+
+      - name: Debug APK bouwen
+        working-directory: Lotus
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          /opt/gradle-8.7/bin/gradle --no-daemon --console=plain assembleDebug
+
+      - name: Debug APK bewaren
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lotus-debug-APK
+          path: Lotus/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+name: Build Lotus debug APK
+
+on:
+  workflow_dispatch:
+  push:
     branches:
       - main
   pull_request:
