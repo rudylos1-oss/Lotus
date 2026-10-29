@@ -1,4 +1,4 @@
-package nl.rudy.lotus;
+<LOCAL_FILE:/home/daytona/workspace/Lotus/Lotus/app/src/main/java/nl/rudy/lotus/MainActivity.java>package nl.rudy.lotus;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
