@@ -24,13 +24,16 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Android SDK installeren
-        uses: android-actions/setup-android@v3
-
-      - name: Android SDK-pakketten installeren
+      - name: Eigen Android SDK installeren
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+          export ANDROID_HOME="$HOME/android-sdk"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl --fail --location --retry 3 --output /tmp/android-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q /tmp/android-tools.zip -d /tmp/android-tools
+          mv /tmp/android-tools/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          yes | sdkmanager --licenses
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Gradle 8.7 ophalen
         run: |
@@ -39,7 +42,7 @@ jobs:
 
       - name: Debug APK bouwen
         run: |
-          printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
+          printf 'sdk.dir=%s\n' "$HOME/android-sdk" > local.properties
           /opt/gradle-8.7/bin/gradle --no-daemon --console=plain assembleDebug
 
       - name: Debug APK bewaren
