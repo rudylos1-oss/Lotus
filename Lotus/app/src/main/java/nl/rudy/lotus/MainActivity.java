@@ -174,6 +174,25 @@ public class MainActivity extends Activity {
         js("window.LotusNativeLocation&&LotusNativeLocation(" + point + ",'" + jsQuote(requestId) + "')");
     }
 
+    private void openMap(double latitude, double longitude, String label) {
+        String safeLabel = label == null ? "Gedeelde locatie" : label;
+        Uri geo = Uri.parse(String.format(Locale.US, "geo:%.6f,%.6f?q=%.6f,%.6f(%s)",
+                latitude, longitude, latitude, longitude, Uri.encode(safeLabel)));
+        Intent intent = new Intent(Intent.ACTION_VIEW, geo);
+        if (intent.resolveActivity(getPackageManager()) == null) {
+            Uri webMap = Uri.parse(String.format(Locale.US,
+                    "https://www.openstreetmap.org/?mlat=%.6f&mlon=%.6f#map=16/%.6f/%.6f",
+                    latitude, longitude, latitude, longitude));
+            intent = new Intent(Intent.ACTION_VIEW, webMap);
+        }
+        try {
+            startActivity(intent);
+        } catch (Exception error) {
+            Toast.makeText(this, "Geen kaart-app beschikbaar", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
     private void createChannel() {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         NotificationChannel channel = new NotificationChannel("lotus_messages", "Lotus berichten", NotificationManager.IMPORTANCE_HIGH);
@@ -299,6 +318,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void requestMyLocationFor(String requestId) {
             runOnUiThread(() -> requestLocation(requestId));
+        }
+
+        @JavascriptInterface
+        public void openMap(double latitude, double longitude, String label) {
+            runOnUiThread(() -> openMap(latitude, longitude, label));
         }
 
         @JavascriptInterface
